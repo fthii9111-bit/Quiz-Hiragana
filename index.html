@@ -1,9 +1,9 @@
-
+<DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kuis Tebak-Tebakan</title>
+<title>Kuis Tebak-Tebakan Hiragana</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -65,13 +65,6 @@
     border-radius: 14px;
     padding: 28px 24px;
   }
-  h1 {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 22px;
-    line-height: 1.35;
-    margin: 0 0 22px;
-  }
   .prompt {
     font-size: 14px;
     color: var(--muted);
@@ -79,7 +72,7 @@
   }
   .kana-display {
     font-family: 'Fraunces', serif;
-    font-size: 88px;
+    font-size: 72px;
     font-weight: 500;
     text-align: center;
     background: var(--bg);
@@ -150,7 +143,7 @@
     font-size: 14px;
     margin: 0 0 24px;
   }
-  .retry {
+  .retry, .backbtn {
     width: 100%;
     background: transparent;
     border: 1px solid var(--gold);
@@ -162,102 +155,126 @@
     font-size: 15px;
     cursor: pointer;
   }
+  .backbtn { margin-top: 10px; border-color: var(--border); color: var(--muted); }
+  .levels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .level-card {
+    text-align: left;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    padding: 16px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.15s ease;
+  }
+  .level-card:hover { border-color: var(--gold); }
+  .level-card .lname {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .level-card .ldesc {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 22px;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <span class="label" id="progressLabel">Soal 1 / 8</span>
+  <div class="top" id="topBar" style="display:none;">
+    <span class="label" id="progressLabel">Soal 1</span>
     <span class="score" id="scoreLabel">Skor: 0</span>
   </div>
-  <div class="track"><div class="track-fill" id="trackFill" style="width:12.5%"></div></div>
+  <div class="track" id="trackWrap" style="display:none;"><div class="track-fill" id="trackFill" style="width:0%"></div></div>
   <div class="card" id="card"></div>
 </div>
 
 <script>
-const questions = [
-  { kana: "あ", options: ["a", "i", "u", "o"], answer: 0 },
-  { kana: "い", options: ["u", "i", "e", "a"], answer: 1 },
-  { kana: "う", options: ["o", "i", "u", "e"], answer: 2 },
-  { kana: "え", options: ["e", "a", "o", "u"], answer: 0 },
-  { kana: "お", options: ["a", "o", "u", "i"], answer: 1 },
-  { kana: "か", options: ["sa", "ka", "na", "ta"], answer: 1 },
-  { kana: "き", options: ["ki", "shi", "chi", "ni"], answer: 0 },
-  { kana: "く", options: ["su", "tsu", "ku", "nu"], answer: 2 },
-  { kana: "け", options: ["ke", "se", "te", "he"], answer: 0 },
-  { kana: "こ", options: ["so", "to", "ko", "no"], answer: 2 },
-  { kana: "さ", options: ["sa", "ka", "ta", "na"], answer: 0 },
-  { kana: "し", options: ["chi", "shi", "ki", "ni"], answer: 1 },
-  { kana: "す", options: ["tsu", "ku", "su", "nu"], answer: 2 },
-  { kana: "せ", options: ["te", "ke", "he", "se"], answer: 3 },
-  { kana: "そ", options: ["so", "ko", "to", "no"], answer: 0 },
-  { kana: "た", options: ["na", "ta", "sa", "ka"], answer: 1 },
-  { kana: "な", options: ["na", "ma", "ha", "ta"], answer: 0 },
-  { kana: "は", options: ["ha", "ba", "pa", "ma"], answer: 0 },
-  { kana: "ま", options: ["ba", "ma", "ha", "wa"], answer: 1 },
-  { kana: "や", options: ["ya", "wa", "ra", "ma"], answer: 0 },
-  { kana: "ら", options: ["ra", "ya", "na", "wa"], answer: 0 },
-  { kana: "わ", options: ["wa", "ra", "ya", "na"], answer: 0 },
-  { kana: "ん", options: ["n", "nu", "no", "na"], answer: 0 },
-  { kana: "が", options: ["ga", "ka", "za", "da"], answer: 0 },
-  { kana: "ぎ", options: ["gi", "ki", "ji", "bi"], answer: 0 },
-  { kana: "ぐ", options: ["ku", "gu", "zu", "bu"], answer: 1 },
-  { kana: "げ", options: ["ke", "ge", "de", "be"], answer: 1 },
-  { kana: "ご", options: ["ko", "do", "go", "bo"], answer: 2 },
-  { kana: "ざ", options: ["za", "sa", "da", "ja"], answer: 0 },
-  { kana: "じ", options: ["shi", "chi", "ji", "gi"], answer: 2 },
-  { kana: "ず", options: ["su", "zu", "tsu", "ju"], answer: 1 },
-  { kana: "ぜ", options: ["ze", "se", "de", "ge"], answer: 0 },
-  { kana: "ぞ", options: ["so", "do", "zo", "go"], answer: 2 },
-  { kana: "だ", options: ["ta", "da", "za", "ba"], answer: 1 },
-  { kana: "ぢ", options: ["chi", "ji", "di", "gi"], answer: 1 },
-  { kana: "づ", options: ["tsu", "zu", "du", "ju"], answer: 1 },
-  { kana: "で", options: ["te", "de", "ze", "ge"], answer: 1 },
-  { kana: "ど", options: ["to", "do", "go", "zo"], answer: 1 },
-  { kana: "ば", options: ["ha", "pa", "ba", "ma"], answer: 2 },
-  { kana: "び", options: ["hi", "bi", "pi", "ni"], answer: 1 },
-  { kana: "ぶ", options: ["fu", "pu", "bu", "mu"], answer: 2 },
-  { kana: "べ", options: ["he", "be", "pe", "de"], answer: 1 },
-  { kana: "ぼ", options: ["ho", "po", "bo", "do"], answer: 2 },
-  { kana: "ぱ", options: ["ha", "ba", "pa", "ma"], answer: 2 },
-  { kana: "ぴ", options: ["hi", "bi", "pi", "ni"], answer: 2 },
-  { kana: "ぷ", options: ["fu", "bu", "pu", "mu"], answer: 2 },
-  { kana: "ぺ", options: ["he", "be", "pe", "de"], answer: 2 },
-  { kana: "ぽ", options: ["ho", "bo", "po", "do"], answer: 2 },
-  { kana: "きゃ", options: ["kya", "sha", "cha", "kyu"], answer: 0 },
-  { kana: "きゅ", options: ["kyo", "kyu", "shu", "chu"], answer: 1 },
-  { kana: "きょ", options: ["kyo", "kya", "sho", "cho"], answer: 0 },
-  { kana: "しゃ", options: ["sha", "cha", "kya", "sho"], answer: 0 },
-  { kana: "しゅ", options: ["shu", "chu", "kyu", "sho"], answer: 0 },
-  { kana: "しょ", options: ["sho", "cho", "kyo", "shu"], answer: 0 },
-  { kana: "ちゃ", options: ["sha", "cha", "kya", "ja"], answer: 1 },
-  { kana: "ちゅ", options: ["shu", "chu", "kyu", "ju"], answer: 1 },
-  { kana: "ちょ", options: ["sho", "cho", "kyo", "jo"], answer: 1 },
-  { kana: "にゃ", options: ["nya", "hya", "mya", "rya"], answer: 0 },
-  { kana: "にゅ", options: ["nyu", "hyu", "myu", "ryu"], answer: 0 },
-  { kana: "にょ", options: ["nyo", "hyo", "myo", "ryo"], answer: 0 },
-  { kana: "ひゃ", options: ["nya", "hya", "bya", "pya"], answer: 1 },
-  { kana: "ひゅ", options: ["nyu", "hyu", "byu", "pyu"], answer: 1 },
-  { kana: "ひょ", options: ["nyo", "hyo", "byo", "pyo"], answer: 1 },
-  { kana: "みゃ", options: ["nya", "hya", "mya", "rya"], answer: 2 },
-  { kana: "みゅ", options: ["nyu", "hyu", "myu", "ryu"], answer: 2 },
-  { kana: "みょ", options: ["nyo", "hyo", "myo", "ryo"], answer: 2 },
-  { kana: "りゃ", options: ["nya", "mya", "rya", "hya"], answer: 2 },
-  { kana: "りゅ", options: ["nyu", "myu", "ryu", "hyu"], answer: 2 },
-  { kana: "りょ", options: ["nyo", "myo", "ryo", "hyo"], answer: 2 },
-  { kana: "じゃ", options: ["ja", "cha", "sha", "gya"], answer: 0 },
-  { kana: "じゅ", options: ["ju", "chu", "shu", "gyu"], answer: 0 },
-  { kana: "じょ", options: ["jo", "cho", "sho", "gyo"], answer: 0 },
-  { kana: "ぎゃ", options: ["gya", "kya", "ja", "bya"], answer: 0 },
-  { kana: "ぎゅ", options: ["gyu", "kyu", "ju", "byu"], answer: 0 },
-  { kana: "ぎょ", options: ["gyo", "kyo", "jo", "byo"], answer: 0 },
-  { kana: "びゃ", options: ["bya", "pya", "hya", "gya"], answer: 0 },
-  { kana: "びゅ", options: ["byu", "pyu", "hyu", "gyu"], answer: 0 },
-  { kana: "びょ", options: ["byo", "pyo", "hyo", "gyo"], answer: 0 },
-  { kana: "ぴゃ", options: ["bya", "pya", "hya", "kya"], answer: 1 },
-  { kana: "ぴゅ", options: ["byu", "pyu", "hyu", "kyu"], answer: 1 },
-  { kana: "ぴょ", options: ["byo", "pyo", "hyo", "kyo"], answer: 1 }
+const KANA = [
+  // Level 1: hiragana dasar, 1 huruf
+  { kana: "あ", romaji: "a", level: 1 }, { kana: "い", romaji: "i", level: 1 },
+  { kana: "う", romaji: "u", level: 1 }, { kana: "え", romaji: "e", level: 1 },
+  { kana: "お", romaji: "o", level: 1 },
+  { kana: "か", romaji: "ka", level: 1 }, { kana: "き", romaji: "ki", level: 1 },
+  { kana: "く", romaji: "ku", level: 1 }, { kana: "け", romaji: "ke", level: 1 },
+  { kana: "こ", romaji: "ko", level: 1 },
+  { kana: "さ", romaji: "sa", level: 1 }, { kana: "し", romaji: "shi", level: 1 },
+  { kana: "す", romaji: "su", level: 1 }, { kana: "せ", romaji: "se", level: 1 },
+  { kana: "そ", romaji: "so", level: 1 },
+  { kana: "た", romaji: "ta", level: 1 }, { kana: "ち", romaji: "chi", level: 1 },
+  { kana: "つ", romaji: "tsu", level: 1 }, { kana: "て", romaji: "te", level: 1 },
+  { kana: "と", romaji: "to", level: 1 },
+  { kana: "な", romaji: "na", level: 1 }, { kana: "に", romaji: "ni", level: 1 },
+  { kana: "ぬ", romaji: "nu", level: 1 }, { kana: "ね", romaji: "ne", level: 1 },
+  { kana: "の", romaji: "no", level: 1 },
+  { kana: "は", romaji: "ha", level: 1 }, { kana: "ひ", romaji: "hi", level: 1 },
+  { kana: "ふ", romaji: "fu", level: 1 }, { kana: "へ", romaji: "he", level: 1 },
+  { kana: "ほ", romaji: "ho", level: 1 },
+  { kana: "ま", romaji: "ma", level: 1 }, { kana: "み", romaji: "mi", level: 1 },
+  { kana: "む", romaji: "mu", level: 1 }, { kana: "め", romaji: "me", level: 1 },
+  { kana: "も", romaji: "mo", level: 1 },
+  { kana: "や", romaji: "ya", level: 1 }, { kana: "ゆ", romaji: "yu", level: 1 },
+  { kana: "よ", romaji: "yo", level: 1 },
+  { kana: "ら", romaji: "ra", level: 1 }, { kana: "り", romaji: "ri", level: 1 },
+  { kana: "る", romaji: "ru", level: 1 }, { kana: "れ", romaji: "re", level: 1 },
+  { kana: "ろ", romaji: "ro", level: 1 },
+  { kana: "わ", romaji: "wa", level: 1 }, { kana: "を", romaji: "wo", level: 1 },
+  { kana: "ん", romaji: "n", level: 1 },
+
+  // Level 2: dakuon & handakuon
+  { kana: "が", romaji: "ga", level: 2 }, { kana: "ぎ", romaji: "gi", level: 2 },
+  { kana: "ぐ", romaji: "gu", level: 2 }, { kana: "げ", romaji: "ge", level: 2 },
+  { kana: "ご", romaji: "go", level: 2 },
+  { kana: "ざ", romaji: "za", level: 2 }, { kana: "じ", romaji: "ji", level: 2 },
+  { kana: "ず", romaji: "zu", level: 2 }, { kana: "ぜ", romaji: "ze", level: 2 },
+  { kana: "ぞ", romaji: "zo", level: 2 },
+  { kana: "だ", romaji: "da", level: 2 }, { kana: "ぢ", romaji: "ji", level: 2 },
+  { kana: "づ", romaji: "zu", level: 2 }, { kana: "で", romaji: "de", level: 2 },
+  { kana: "ど", romaji: "do", level: 2 },
+  { kana: "ば", romaji: "ba", level: 2 }, { kana: "び", romaji: "bi", level: 2 },
+  { kana: "ぶ", romaji: "bu", level: 2 }, { kana: "べ", romaji: "be", level: 2 },
+  { kana: "ぼ", romaji: "bo", level: 2 },
+  { kana: "ぱ", romaji: "pa", level: 2 }, { kana: "ぴ", romaji: "pi", level: 2 },
+  { kana: "ぷ", romaji: "pu", level: 2 }, { kana: "ぺ", romaji: "pe", level: 2 },
+  { kana: "ぽ", romaji: "po", level: 2 },
+
+  // Level 3: yoon (kana gabungan)
+  { kana: "きゃ", romaji: "kya", level: 3 }, { kana: "きゅ", romaji: "kyu", level: 3 }, { kana: "きょ", romaji: "kyo", level: 3 },
+  { kana: "しゃ", romaji: "sha", level: 3 }, { kana: "しゅ", romaji: "shu", level: 3 }, { kana: "しょ", romaji: "sho", level: 3 },
+  { kana: "ちゃ", romaji: "cha", level: 3 }, { kana: "ちゅ", romaji: "chu", level: 3 }, { kana: "ちょ", romaji: "cho", level: 3 },
+  { kana: "にゃ", romaji: "nya", level: 3 }, { kana: "にゅ", romaji: "nyu", level: 3 }, { kana: "にょ", romaji: "nyo", level: 3 },
+  { kana: "ひゃ", romaji: "hya", level: 3 }, { kana: "ひゅ", romaji: "hyu", level: 3 }, { kana: "ひょ", romaji: "hyo", level: 3 },
+  { kana: "みゃ", romaji: "mya", level: 3 }, { kana: "みゅ", romaji: "myu", level: 3 }, { kana: "みょ", romaji: "myo", level: 3 },
+  { kana: "りゃ", romaji: "rya", level: 3 }, { kana: "りゅ", romaji: "ryu", level: 3 }, { kana: "りょ", romaji: "ryo", level: 3 },
+  { kana: "じゃ", romaji: "ja", level: 3 }, { kana: "じゅ", romaji: "ju", level: 3 }, { kana: "じょ", romaji: "jo", level: 3 },
+  { kana: "ぎゃ", romaji: "gya", level: 3 }, { kana: "ぎゅ", romaji: "gyu", level: 3 }, { kana: "ぎょ", romaji: "gyo", level: 3 },
+  { kana: "びゃ", romaji: "bya", level: 3 }, { kana: "びゅ", romaji: "byu", level: 3 }, { kana: "びょ", romaji: "byo", level: 3 },
+  { kana: "ぴゃ", romaji: "pya", level: 3 }, { kana: "ぴゅ", romaji: "pyu", level: 3 }, { kana: "ぴょ", romaji: "pyo", level: 3 }
 ];
+
+const LEVELS = {
+  1: { name: "Level 1: Hiragana Dasar", desc: "46 huruf tunggal — a, i, u, ka, sa, ta, na ..." },
+  2: { name: "Level 2: Dakuon & Handakuon", desc: "Huruf dengan tanda petik dan bulatan — ga, za, da, ba, pa ..." },
+  3: { name: "Level 3: Yōon", desc: "Kana gabungan — kya, sha, cha, nya ..." }
+};
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -268,15 +285,20 @@ function shuffle(arr) {
   return a;
 }
 
-function pickQuiz(n) {
-  return shuffle(questions).slice(0, n).map(item => {
-    const correctText = item.options[item.answer];
-    const opts = shuffle(item.options);
-    return { kana: item.kana, options: opts, answer: opts.indexOf(correctText) };
+function pickQuiz(level, n) {
+  const pool = KANA.filter(k => k.level === level);
+  const chosen = shuffle(pool).slice(0, Math.min(n, pool.length));
+  return chosen.map(item => {
+    const distractors = shuffle(pool.filter(k => k.romaji !== item.romaji))
+      .slice(0, 3)
+      .map(k => k.romaji);
+    const opts = shuffle([item.romaji, ...distractors]);
+    return { kana: item.kana, options: opts, answer: opts.indexOf(item.romaji) };
   });
 }
 
-let quizSet = pickQuiz(20);
+let quizSet = [];
+let currentLevel = 1;
 let current = 0;
 let score = 0;
 let answered = false;
@@ -285,13 +307,45 @@ const card = document.getElementById('card');
 const progressLabel = document.getElementById('progressLabel');
 const scoreLabel = document.getElementById('scoreLabel');
 const trackFill = document.getElementById('trackFill');
+const topBar = document.getElementById('topBar');
+const trackWrap = document.getElementById('trackWrap');
+
+function renderLevelSelect() {
+  topBar.style.display = 'none';
+  trackWrap.style.display = 'none';
+  card.innerHTML = `
+    <p class="title">Kuis Hiragana</p>
+    <p class="subtitle">Pilih level buat mulai latihan.</p>
+    <div class="levels">
+      ${[1,2,3].map(l => `
+        <button class="level-card" data-l="${l}">
+          <div class="lname">${LEVELS[l].name}</div>
+          <div class="ldesc">${LEVELS[l].desc}</div>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  document.querySelectorAll('.level-card').forEach(btn => {
+    btn.addEventListener('click', () => startLevel(parseInt(btn.dataset.l)));
+  });
+}
+
+function startLevel(level) {
+  currentLevel = level;
+  quizSet = pickQuiz(level, 20);
+  current = 0;
+  score = 0;
+  topBar.style.display = 'flex';
+  trackWrap.style.display = 'block';
+  renderQuestion();
+}
 
 function renderQuestion() {
   answered = false;
   const item = quizSet[current];
   progressLabel.textContent = `Soal ${current + 1} / ${quizSet.length}`;
   scoreLabel.textContent = `Skor: ${score}`;
-  trackFill.style.width = `${((current) / quizSet.length) * 100}%`;
+  trackFill.style.width = `${(current / quizSet.length) * 100}%`;
 
   card.innerHTML = `
     <p class="prompt">Bacaan huruf hiragana ini adalah?</p>
@@ -346,19 +400,20 @@ function renderResult() {
   card.innerHTML = `
     <div class="result">
       <div class="big">${score}/${quizSet.length}</div>
-      <p>${msg}</p>
+      <p>${LEVELS[currentLevel].name} — ${msg}</p>
       <button class="retry" id="retryBtn">Main Lagi</button>
+      <button class="backbtn" id="backBtn">Pilih Level Lain</button>
     </div>
   `;
   document.getElementById('retryBtn').addEventListener('click', () => {
-    quizSet = pickQuiz(20);
-    current = 0;
-    score = 0;
-    renderQuestion();
+    startLevel(currentLevel);
+  });
+  document.getElementById('backBtn').addEventListener('click', () => {
+    renderLevelSelect();
   });
 }
 
-renderQuestion();
+renderLevelSelect();
 </script>
 </body>
 </html>
