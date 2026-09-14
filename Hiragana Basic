@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -36,3 +36,329 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .top .label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .top .score {
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .track-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 0.35s ease;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.35;
+    margin: 0 0 22px;
+  }
+  .prompt {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+  .kana-display {
+    font-family: 'Fraunces', serif;
+    font-size: 88px;
+    font-weight: 500;
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 0;
+    margin-bottom: 22px;
+    color: var(--gold);
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .opt {
+    text-align: left;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--cream);
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .opt:hover:not(:disabled) {
+    border-color: var(--gold);
+  }
+  .opt:disabled { cursor: default; }
+  .opt.correct {
+    border-color: var(--correct);
+    background: rgba(76, 154, 142, 0.15);
+  }
+  .opt.wrong {
+    border-color: var(--wrong);
+    background: rgba(193, 85, 77, 0.15);
+  }
+  .next {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--gold);
+    color: #1B2430;
+    border: none;
+    padding: 13px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .next.show { opacity: 1; pointer-events: auto; }
+  .result {
+    text-align: center;
+  }
+  .result .big {
+    font-family: 'Fraunces', serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--gold);
+    margin: 6px 0 4px;
+  }
+  .result p {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .retry {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 13px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="label" id="progressLabel">Soal 1 / 8</span>
+    <span class="score" id="scoreLabel">Skor: 0</span>
+  </div>
+  <div class="track"><div class="track-fill" id="trackFill" style="width:12.5%"></div></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const questions = [
+  { kana: "あ", options: ["a", "i", "u", "o"], answer: 0 },
+  { kana: "い", options: ["u", "i", "e", "a"], answer: 1 },
+  { kana: "う", options: ["o", "i", "u", "e"], answer: 2 },
+  { kana: "え", options: ["e", "a", "o", "u"], answer: 0 },
+  { kana: "お", options: ["a", "o", "u", "i"], answer: 1 },
+  { kana: "か", options: ["sa", "ka", "na", "ta"], answer: 1 },
+  { kana: "き", options: ["ki", "shi", "chi", "ni"], answer: 0 },
+  { kana: "く", options: ["su", "tsu", "ku", "nu"], answer: 2 },
+  { kana: "け", options: ["ke", "se", "te", "he"], answer: 0 },
+  { kana: "こ", options: ["so", "to", "ko", "no"], answer: 2 },
+  { kana: "さ", options: ["sa", "ka", "ta", "na"], answer: 0 },
+  { kana: "し", options: ["chi", "shi", "ki", "ni"], answer: 1 },
+  { kana: "す", options: ["tsu", "ku", "su", "nu"], answer: 2 },
+  { kana: "せ", options: ["te", "ke", "he", "se"], answer: 3 },
+  { kana: "そ", options: ["so", "ko", "to", "no"], answer: 0 },
+  { kana: "た", options: ["na", "ta", "sa", "ka"], answer: 1 },
+  { kana: "な", options: ["na", "ma", "ha", "ta"], answer: 0 },
+  { kana: "は", options: ["ha", "ba", "pa", "ma"], answer: 0 },
+  { kana: "ま", options: ["ba", "ma", "ha", "wa"], answer: 1 },
+  { kana: "や", options: ["ya", "wa", "ra", "ma"], answer: 0 },
+  { kana: "ら", options: ["ra", "ya", "na", "wa"], answer: 0 },
+  { kana: "わ", options: ["wa", "ra", "ya", "na"], answer: 0 },
+  { kana: "ん", options: ["n", "nu", "no", "na"], answer: 0 },
+  { kana: "が", options: ["ga", "ka", "za", "da"], answer: 0 },
+  { kana: "ぎ", options: ["gi", "ki", "ji", "bi"], answer: 0 },
+  { kana: "ぐ", options: ["ku", "gu", "zu", "bu"], answer: 1 },
+  { kana: "げ", options: ["ke", "ge", "de", "be"], answer: 1 },
+  { kana: "ご", options: ["ko", "do", "go", "bo"], answer: 2 },
+  { kana: "ざ", options: ["za", "sa", "da", "ja"], answer: 0 },
+  { kana: "じ", options: ["shi", "chi", "ji", "gi"], answer: 2 },
+  { kana: "ず", options: ["su", "zu", "tsu", "ju"], answer: 1 },
+  { kana: "ぜ", options: ["ze", "se", "de", "ge"], answer: 0 },
+  { kana: "ぞ", options: ["so", "do", "zo", "go"], answer: 2 },
+  { kana: "だ", options: ["ta", "da", "za", "ba"], answer: 1 },
+  { kana: "ぢ", options: ["chi", "ji", "di", "gi"], answer: 1 },
+  { kana: "づ", options: ["tsu", "zu", "du", "ju"], answer: 1 },
+  { kana: "で", options: ["te", "de", "ze", "ge"], answer: 1 },
+  { kana: "ど", options: ["to", "do", "go", "zo"], answer: 1 },
+  { kana: "ば", options: ["ha", "pa", "ba", "ma"], answer: 2 },
+  { kana: "び", options: ["hi", "bi", "pi", "ni"], answer: 1 },
+  { kana: "ぶ", options: ["fu", "pu", "bu", "mu"], answer: 2 },
+  { kana: "べ", options: ["he", "be", "pe", "de"], answer: 1 },
+  { kana: "ぼ", options: ["ho", "po", "bo", "do"], answer: 2 },
+  { kana: "ぱ", options: ["ha", "ba", "pa", "ma"], answer: 2 },
+  { kana: "ぴ", options: ["hi", "bi", "pi", "ni"], answer: 2 },
+  { kana: "ぷ", options: ["fu", "bu", "pu", "mu"], answer: 2 },
+  { kana: "ぺ", options: ["he", "be", "pe", "de"], answer: 2 },
+  { kana: "ぽ", options: ["ho", "bo", "po", "do"], answer: 2 },
+  { kana: "きゃ", options: ["kya", "sha", "cha", "kyu"], answer: 0 },
+  { kana: "きゅ", options: ["kyo", "kyu", "shu", "chu"], answer: 1 },
+  { kana: "きょ", options: ["kyo", "kya", "sho", "cho"], answer: 0 },
+  { kana: "しゃ", options: ["sha", "cha", "kya", "sho"], answer: 0 },
+  { kana: "しゅ", options: ["shu", "chu", "kyu", "sho"], answer: 0 },
+  { kana: "しょ", options: ["sho", "cho", "kyo", "shu"], answer: 0 },
+  { kana: "ちゃ", options: ["sha", "cha", "kya", "ja"], answer: 1 },
+  { kana: "ちゅ", options: ["shu", "chu", "kyu", "ju"], answer: 1 },
+  { kana: "ちょ", options: ["sho", "cho", "kyo", "jo"], answer: 1 },
+  { kana: "にゃ", options: ["nya", "hya", "mya", "rya"], answer: 0 },
+  { kana: "にゅ", options: ["nyu", "hyu", "myu", "ryu"], answer: 0 },
+  { kana: "にょ", options: ["nyo", "hyo", "myo", "ryo"], answer: 0 },
+  { kana: "ひゃ", options: ["nya", "hya", "bya", "pya"], answer: 1 },
+  { kana: "ひゅ", options: ["nyu", "hyu", "byu", "pyu"], answer: 1 },
+  { kana: "ひょ", options: ["nyo", "hyo", "byo", "pyo"], answer: 1 },
+  { kana: "みゃ", options: ["nya", "hya", "mya", "rya"], answer: 2 },
+  { kana: "みゅ", options: ["nyu", "hyu", "myu", "ryu"], answer: 2 },
+  { kana: "みょ", options: ["nyo", "hyo", "myo", "ryo"], answer: 2 },
+  { kana: "りゃ", options: ["nya", "mya", "rya", "hya"], answer: 2 },
+  { kana: "りゅ", options: ["nyu", "myu", "ryu", "hyu"], answer: 2 },
+  { kana: "りょ", options: ["nyo", "myo", "ryo", "hyo"], answer: 2 },
+  { kana: "じゃ", options: ["ja", "cha", "sha", "gya"], answer: 0 },
+  { kana: "じゅ", options: ["ju", "chu", "shu", "gyu"], answer: 0 },
+  { kana: "じょ", options: ["jo", "cho", "sho", "gyo"], answer: 0 },
+  { kana: "ぎゃ", options: ["gya", "kya", "ja", "bya"], answer: 0 },
+  { kana: "ぎゅ", options: ["gyu", "kyu", "ju", "byu"], answer: 0 },
+  { kana: "ぎょ", options: ["gyo", "kyo", "jo", "byo"], answer: 0 },
+  { kana: "びゃ", options: ["bya", "pya", "hya", "gya"], answer: 0 },
+  { kana: "びゅ", options: ["byu", "pyu", "hyu", "gyu"], answer: 0 },
+  { kana: "びょ", options: ["byo", "pyo", "hyo", "gyo"], answer: 0 },
+  { kana: "ぴゃ", options: ["bya", "pya", "hya", "kya"], answer: 1 },
+  { kana: "ぴゅ", options: ["byu", "pyu", "hyu", "kyu"], answer: 1 },
+  { kana: "ぴょ", options: ["byo", "pyo", "hyo", "kyo"], answer: 1 }
+];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickQuiz(n) {
+  return shuffle(questions).slice(0, n).map(item => {
+    const correctText = item.options[item.answer];
+    const opts = shuffle(item.options);
+    return { kana: item.kana, options: opts, answer: opts.indexOf(correctText) };
+  });
+}
+
+let quizSet = pickQuiz(20);
+let current = 0;
+let score = 0;
+let answered = false;
+
+const card = document.getElementById('card');
+const progressLabel = document.getElementById('progressLabel');
+const scoreLabel = document.getElementById('scoreLabel');
+const trackFill = document.getElementById('trackFill');
+
+function renderQuestion() {
+  answered = false;
+  const item = quizSet[current];
+  progressLabel.textContent = `Soal ${current + 1} / ${quizSet.length}`;
+  scoreLabel.textContent = `Skor: ${score}`;
+  trackFill.style.width = `${((current) / quizSet.length) * 100}%`;
+
+  card.innerHTML = `
+    <p class="prompt">Bacaan huruf hiragana ini adalah?</p>
+    <div class="kana-display">${item.kana}</div>
+    <div class="options" id="options">
+      ${item.options.map((opt, i) => `<button class="opt" data-i="${i}">${opt}</button>`).join('')}
+    </div>
+    <button class="next" id="nextBtn">${current === quizSet.length - 1 ? 'Lihat Hasil' : 'Lanjut'}</button>
+  `;
+
+  document.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => selectAnswer(parseInt(btn.dataset.i)));
+  });
+  document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+}
+
+function selectAnswer(i) {
+  if (answered) return;
+  answered = true;
+  const item = quizSet[current];
+  const btns = document.querySelectorAll('.opt');
+  btns.forEach(b => b.disabled = true);
+  if (i === item.answer) {
+    score++;
+    btns[i].classList.add('correct');
+  } else {
+    btns[i].classList.add('wrong');
+    btns[item.answer].classList.add('correct');
+  }
+  scoreLabel.textContent = `Skor: ${score}`;
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= quizSet.length) {
+    renderResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function renderResult() {
+  trackFill.style.width = '100%';
+  progressLabel.textContent = 'Selesai';
+  const pct = Math.round((score / quizSet.length) * 100);
+  let msg = 'Terus berlatih!';
+  if (pct >= 90) msg = 'Luar biasa, hampir hafal semua!';
+  else if (pct >= 70) msg = 'Bagus sekali!';
+  else if (pct >= 50) msg = 'Lumayan, coba lagi!';
+
+  card.innerHTML = `
+    <div class="result">
+      <div class="big">${score}/${quizSet.length}</div>
+      <p>${msg}</p>
+      <button class="retry" id="retryBtn">Main Lagi</button>
+    </div>
+  `;
+  document.getElementById('retryBtn').addEventListener('click', () => {
+    quizSet = pickQuiz(20);
+    current = 0;
+    score = 0;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
