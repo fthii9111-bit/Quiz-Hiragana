@@ -425,9 +425,9 @@ function renderResult() {
   progressLabel.textContent = 'Selesai';
   const pct = Math.round((score / quizSet.length) * 100);
   let msg = 'Terus berlatih!';
-  if (pct >= 90) msg = 'Luar biasa, hampir hafal semua!';
-  else if (pct >= 70) msg = 'Bagus sekali!';
-  else if (pct >= 50) msg = 'Lumayan, coba lagi!';
+  if (pct >= 90) msg = 'Nanggung,Belajar lagi nyet!';
+  else if (pct >= 70) msg = 'Mayan Dah!';
+  else if (pct >= 50) msg = 'TOLOL, coba lagi!';
 
   card.innerHTML = `
     <div class="result">
